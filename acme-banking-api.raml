@@ -1,0 +1,103 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/59a9cc34-171a-4825-a68d-7d0367cacd03/mocks/5cf0cae2-02bc-47b1-a384-5a4676bb2228 # baseUri: https://mocksvc.mulesoft.com/mocks/5cf0cae2-02bc-47b1-a384-5a4676bb2228 # 
+version: v1
+title: ACME Banking API
+mediaType: application/json
+
+documentation:
+  - !include documentation/acmeBankHeadline.raml
+  - !include documentation/acmeBankDoc.raml
+
+types: 
+  Customer: !include exchange_modules/b2447622-1656-4ff2-85a7-6a4627f47b7f/banking-data-types/1.0.0/datatypes/Customer.raml
+  Account: !include exchange_modules/b2447622-1656-4ff2-85a7-6a4627f47b7f/banking-data-types/1.0.0/datatypes/Account.raml
+  Transaction: !include exchange_modules/b2447622-1656-4ff2-85a7-6a4627f47b7f/banking-data-types/1.0.0/datatypes/Transaction.raml
+  CustomErrorMessage: !include datatypes/CustomErrorMessage.raml
+
+resourceTypes: 
+  collection: !include resourceTypes/collection.raml
+  member: !include resourceTypes/member.raml
+  stateSpecific: !include resourceTypes/stateSpecificResourceType.raml
+
+uses: 
+  Traits: libraries/TraitsLibrary.raml
+
+securitySchemes: 
+  customTokenSecurity: !include securitySchemes/customTokenSecurity.raml 
+  oauth2_0: !include exchange_modules/68ef9520-24e9-4cf2-b2f5-620025690913/training-oauth20-security-scheme/1.0.1/OAuth2.raml
+
+securedBy: customTokenSecurity
+
+/customers:
+  type:
+    collection:
+      customErrorDataType: CustomErrorMessage
+  post:
+  get:
+    description: Retrieve a list of customers
+    displayName: Get all customers
+    securedBy: oauth2_0
+    is: 
+      - Traits.cacheable
+      - Traits.hasAcceptHeader:  
+          customErrorDataType : CustomErrorMessage
+    responses: 
+      200:
+        body:
+          application/json:
+            type: Customer[]
+          application/xml:
+            type: Customer[]
+      404:
+        body:
+          type: CustomErrorMessage 
+  /{customer_id}:
+    type:
+      member:
+        exampleValue: !include examples/CustomerExample.raml
+        customErrorDataType: CustomErrorMessage
+    get:
+    patch:
+    delete:
+    /accounts:
+      get:
+        is: 
+          - Traits.hasGetResponse:
+              customErrorDataType: CustomErrorMessage
+    /status:
+      type: stateSpecific
+
+/accounts:
+  type:
+    collection:
+      customErrorDataType: CustomErrorMessage
+  post:
+  /{account_id}:
+    type:
+      member:
+        exampleValue: !include examples/AccountExample.raml
+        customErrorDataType: CustomErrorMessage
+    get:
+    put:
+    delete:
+    /transactions:
+      get:
+        is: 
+          - Traits.hasGetResponse:
+              customErrorDataType: CustomErrorMessage
+    /status:
+      type: stateSpecific
+
+/transactions:
+  type: 
+    collection:
+      customErrorDataType: CustomErrorMessage
+  post:
+  /{transaction_id}:
+    type:
+      member:
+        exampleValue: !include examples/TransactionExample.raml
+        customErrorDataType: CustomErrorMessage
+    get:
+  /status:
+    type: stateSpecific
